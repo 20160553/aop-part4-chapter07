@@ -1,6 +1,7 @@
 package aqper.side_project.aop_part4_chapter07
 
 import android.Manifest
+import android.app.WallpaperManager
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
@@ -10,7 +11,6 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -157,6 +157,28 @@ class MainActivity : AppCompatActivity() {
                         transition: Transition<in Bitmap>?
                     ) {
                         saveBitmapToMediaStore(resource)
+
+                        val wallpapaerManager = WallpaperManager.getInstance(this@MainActivity)
+                        val snackbar = Snackbar.make(
+                            binding.root,
+                            "다운로드 완료",
+                            Snackbar.LENGTH_SHORT
+                        )
+
+                        if (wallpapaerManager.isWallpaperSupported
+                            && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                            && wallpapaerManager.isSetWallpaperAllowed) {
+                            snackbar.setAction("배경 화면으로 저장") {
+                                try {
+                                    wallpapaerManager.setBitmap(resource)
+                                } catch (e: Exception) {
+                                    Snackbar.make(binding.root, "배경화면 저장 실패", Snackbar.LENGTH_SHORT).show()
+                                }
+                                snackbar.duration = Snackbar.LENGTH_INDEFINITE
+                            }
+                            snackbar.show()
+                        }
+
                     }
 
                     override fun onLoadStarted(placeholder: Drawable?) {
@@ -215,8 +237,6 @@ class MainActivity : AppCompatActivity() {
             imageDetails.put(MediaStore.Images.Media.IS_PENDING, 0)
             resolver.update(imageUri, imageDetails, null, null)
         }
-
-        Snackbar.make(binding.root, "다운로드 완료", Snackbar.LENGTH_SHORT).show()
     }
 
     companion object {
